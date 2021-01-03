@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 插件处理链
  * @author Clinton Begin
  */
 public class InterceptorChain {

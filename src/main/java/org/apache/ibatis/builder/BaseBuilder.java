@@ -46,6 +46,12 @@ public abstract class BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 创建正则表达式
+   * @param regex
+   * @param defaultValue
+   * @return
+   */
   protected Pattern parseExpression(String regex, String defaultValue) {
     return Pattern.compile(regex == null ? defaultValue : regex);
   }
@@ -63,6 +69,11 @@ public abstract class BaseBuilder {
     return new HashSet<String>(Arrays.asList(value.split(",")));
   }
 
+  /**
+   * 根据名字获取枚举
+   * @param alias
+   * @return
+   */
   protected JdbcType resolveJdbcType(String alias) {
     if (alias == null) {
       return null;
@@ -74,6 +85,11 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   * 获取枚举
+   * @param alias
+   * @return
+   */
   protected ResultSetType resolveResultSetType(String alias) {
     if (alias == null) {
       return null;
@@ -85,6 +101,11 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   * ParameterMode 枚举, 不知道干嘛的
+   * @param alias
+   * @return
+   */
   protected ParameterMode resolveParameterMode(String alias) {
     if (alias == null) {
       return null;
@@ -97,11 +118,13 @@ public abstract class BaseBuilder {
   }
 
   protected Object createInstance(String alias) {
+    // 通过别名或者全类名获取类
     Class<?> clazz = resolveClass(alias);
     if (clazz == null) {
       return null;
     }
     try {
+      // 重复获取了一次
       return resolveClass(alias).newInstance();
     } catch (Exception e) {
       throw new BuilderException("Error creating instance. Cause: " + e, e);
@@ -123,12 +146,14 @@ public abstract class BaseBuilder {
     if (typeHandlerAlias == null) {
       return null;
     }
+    //根据类名 获取 typeHandler
     Class<?> type = resolveClass(typeHandlerAlias);
     if (type != null && !TypeHandler.class.isAssignableFrom(type)) {
       throw new BuilderException("Type " + type.getName() + " is not a valid TypeHandler because it does not implement TypeHandler interface");
     }
     @SuppressWarnings( "unchecked" ) // already verified it is a TypeHandler
     Class<? extends TypeHandler<?>> typeHandlerType = (Class<? extends TypeHandler<?>>) type;
+    // 获取typeHandler
     return resolveTypeHandler(javaType, typeHandlerType);
   }
 

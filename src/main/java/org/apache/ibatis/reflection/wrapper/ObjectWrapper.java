@@ -22,12 +22,22 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 基于mateClass的工具
  * @author Clinton Begin
  */
 public interface ObjectWrapper {
-
+  /**
+   * 获取属性
+   * @param prop
+   * @return
+   */
   Object get(PropertyTokenizer prop);
 
+  /**
+   * 设置属性
+   * @param prop
+   * @param value
+   */
   void set(PropertyTokenizer prop, Object value);
 
   String findProperty(String name, boolean useCamelCaseMapping);

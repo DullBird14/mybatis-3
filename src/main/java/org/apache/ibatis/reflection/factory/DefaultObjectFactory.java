@@ -65,10 +65,12 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
         }
         return constructor.newInstance();
       }
+      //查找指定的构造函数
       constructor = type.getDeclaredConstructor(constructorArgTypes.toArray(new Class[constructorArgTypes.size()]));
       if (!constructor.isAccessible()) {
         constructor.setAccessible(true);
       }
+      //用指定的构造函数实例化
       return constructor.newInstance(constructorArgs.toArray(new Object[constructorArgs.size()]));
     } catch (Exception e) {
       StringBuilder argTypes = new StringBuilder();
@@ -91,6 +93,11 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     }
   }
 
+  /**
+   * 如果是接口，转换成对应的实现子类
+   * @param type
+   * @return
+   */
   protected Class<?> resolveInterface(Class<?> type) {
     Class<?> classToCreate;
     if (type == List.class || type == Collection.class || type == Iterable.class) {

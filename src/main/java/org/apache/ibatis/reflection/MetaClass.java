@@ -39,10 +39,18 @@ public class MetaClass {
     this.reflector = reflectorFactory.findForClass(type);
   }
 
+  /**
+   * 获取 MetaClass，通过类
+   * @param type
+   * @param reflectorFactory
+   * @return
+   */
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
     return new MetaClass(type, reflectorFactory);
   }
-
+  /**
+   * 获取属性的 MetaClass
+   */
   public MetaClass metaClassForProperty(String name) {
     Class<?> propType = reflector.getGetterType(name);
     return MetaClass.forClass(propType, reflectorFactory);
@@ -53,8 +61,16 @@ public class MetaClass {
     return prop.length() > 0 ? prop.toString() : null;
   }
 
+  /**
+   * 查找一个属性
+   * @param name
+   * @param useCamelCaseMapping
+   * @return
+   */
   public String findProperty(String name, boolean useCamelCaseMapping) {
+    //查找属性，通过驼峰
     if (useCamelCaseMapping) {
+      //下划线转换成""
       name = name.replace("_", "");
     }
     return findProperty(name);
@@ -96,7 +112,9 @@ public class MetaClass {
   private Class<?> getGetterType(PropertyTokenizer prop) {
     Class<?> type = reflector.getGetterType(prop.getName());
     if (prop.getIndex() != null && Collection.class.isAssignableFrom(type)) {
+      //如果是list类型，要找到list的真实类型
       Type returnType = getGenericGetterType(prop.getName());
+      //泛型解析
       if (returnType instanceof ParameterizedType) {
         Type[] actualTypeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
         if (actualTypeArguments != null && actualTypeArguments.length == 1) {
@@ -116,11 +134,13 @@ public class MetaClass {
     try {
       Invoker invoker = reflector.getGetInvoker(propertyName);
       if (invoker instanceof MethodInvoker) {
+        // 拿到methodInvoker
         Field _method = MethodInvoker.class.getDeclaredField("method");
         _method.setAccessible(true);
         Method method = (Method) _method.get(invoker);
         return TypeParameterResolver.resolveReturnType(method, reflector.getType());
       } else if (invoker instanceof GetFieldInvoker) {
+        //直接是filed属性。没有get方法
         Field _field = GetFieldInvoker.class.getDeclaredField("field");
         _field.setAccessible(true);
         Field field = (Field) _field.get(invoker);
@@ -171,14 +191,17 @@ public class MetaClass {
   private StringBuilder buildProperty(String name, StringBuilder builder) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
+      //找到属性的名称
       String propertyName = reflector.findPropertyName(prop.getName());
       if (propertyName != null) {
         builder.append(propertyName);
         builder.append(".");
         MetaClass metaProp = metaClassForProperty(propertyName);
+        //递归设置子属性
         metaProp.buildProperty(prop.getChildren(), builder);
       }
     } else {
+      //说明奥最后一个层级了。直接拼接返回，得到类似a.b.c这样的结构
       String propertyName = reflector.findPropertyName(name);
       if (propertyName != null) {
         builder.append(propertyName);

@@ -41,28 +41,40 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
 /**
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
- *
+ * 一个类对应的一个反射对象
  * @author Clinton Begin
  */
 public class Reflector {
-
+  //类的类型
   private final Class<?> type;
+  // 可以读的属性名称数组
   private final String[] readablePropertyNames;
+  //可写的属性名称数组
   private final String[] writeablePropertyNames;
+  // 属性->setter方法invoker的map
   private final Map<String, Invoker> setMethods = new HashMap<String, Invoker>();
+  // 属性-> getter方法incoker的map
   private final Map<String, Invoker> getMethods = new HashMap<String, Invoker>();
+  // 可以写的名称->属性类型
   private final Map<String, Class<?>> setTypes = new HashMap<String, Class<?>>();
+  // 可以读的名称->属性类型
   private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
+  //默认无参构造函数
   private Constructor<?> defaultConstructor;
-
+  /**
+   * 属性英文大写和属性名称的map映射
+   */
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
 
   public Reflector(Class<?> clazz) {
-    type = clazz;
-    addDefaultConstructor(clazz);
-    addGetMethods(clazz);
+    type = clazz;//类对象
+    addDefaultConstructor(clazz);//添加默认无参构造函数
+    addGetMethods(clazz);//属性名称->getter方法的invoker 和 getTypes
+    //属性名称->setter方法的invoker 和 setTypes
     addSetMethods(clazz);
+    //遍历。如果不存在上面的属性。添加到 getTypes 和 setTypes
     addFields(clazz);
+    //初始化 readablePropertyNames, writablePropertyNames,caseInsensitivePropertyMap
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
     for (String propName : readablePropertyNames) {

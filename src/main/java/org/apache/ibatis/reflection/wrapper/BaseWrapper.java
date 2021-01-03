@@ -28,12 +28,21 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
 public abstract class BaseWrapper implements ObjectWrapper {
 
   protected static final Object[] NO_ARGUMENTS = new Object[0];
+  /**
+   *
+   */
   protected final MetaObject metaObject;
 
   protected BaseWrapper(MetaObject metaObject) {
     this.metaObject = metaObject;
   }
 
+  /**
+   * 处理集合的情况。a[1].b[0].c
+   * @param prop
+   * @param object
+   * @return
+   */
   protected Object resolveCollection(PropertyTokenizer prop, Object object) {
     if ("".equals(prop.getName())) {
       return object;

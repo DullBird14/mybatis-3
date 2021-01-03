@@ -28,6 +28,7 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapper;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
 
 /**
+ * objectWrapper 的包装
  * @author Clinton Begin
  */
 public class MetaObject {

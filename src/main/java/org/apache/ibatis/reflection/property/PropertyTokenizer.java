@@ -18,12 +18,25 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 解析数组形式的 a[0].b[1].a
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
+  /**
+   * 其中的名字。比如a
+   */
   private String name;
+  /**
+   * 比如 a[0]
+   */
   private final String indexedName;
+  /**
+   * [中间的东西]，这里是0
+   */
   private String index;
+  /**
+   * 子字符串 b[1].a
+   */
   private final String children;
 
   public PropertyTokenizer(String fullname) {

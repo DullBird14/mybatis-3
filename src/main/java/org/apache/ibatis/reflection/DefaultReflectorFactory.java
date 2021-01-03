@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public class DefaultReflectorFactory implements ReflectorFactory {
   private boolean classCacheEnabled = true;
+  // 线程安全的map
   private final ConcurrentMap<Class<?>, Reflector> reflectorMap = new ConcurrentHashMap<Class<?>, Reflector>();
 
   public DefaultReflectorFactory() {
@@ -37,8 +38,9 @@ public class DefaultReflectorFactory implements ReflectorFactory {
 
   @Override
   public Reflector findForClass(Class<?> type) {
+    //启动缓存。从缓存中拿，拿不到就创建
     if (classCacheEnabled) {
-            // synchronized (type) removed see issue #461
+      // synchronized (type) removed see issue #461
       Reflector cached = reflectorMap.get(type);
       if (cached == null) {
         cached = new Reflector(type);
@@ -46,8 +48,8 @@ public class DefaultReflectorFactory implements ReflectorFactory {
       }
       return cached;
     } else {
+      //没有缓存的话就创建
       return new Reflector(type);
     }
   }
-
 }
