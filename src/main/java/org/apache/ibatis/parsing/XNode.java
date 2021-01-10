@@ -81,13 +81,13 @@ public class XNode {
         builder.insert(0, "_");
       }
       String value = current.getStringAttribute("id",
-          current.getStringAttribute("value",
-              current.getStringAttribute("property", null)));
+              current.getStringAttribute("value",
+                      current.getStringAttribute("property", null)));
       if (value != null) {
         value = value.replace('.', '_');
         builder.insert(0, "]");
         builder.insert(0,
-            value);
+                value);
         builder.insert(0, "[");
       }
       builder.insert(0, current.getName());
@@ -213,6 +213,12 @@ public class XNode {
     return getStringAttribute(name, null);
   }
 
+  /**
+   * 获取属性。如果不存在返回给定
+   * @param name
+   * @param def
+   * @return
+   */
   public String getStringAttribute(String name, String def) {
     String value = attributes.getProperty(name);
     if (value == null) {
@@ -377,7 +383,7 @@ public class XNode {
 
   private String getBodyData(Node child) {
     if (child.getNodeType() == Node.CDATA_SECTION_NODE
-        || child.getNodeType() == Node.TEXT_NODE) {
+            || child.getNodeType() == Node.TEXT_NODE) {
       String data = ((CharacterData) child).getData();
       data = PropertyParser.parse(data, variables);
       return data;

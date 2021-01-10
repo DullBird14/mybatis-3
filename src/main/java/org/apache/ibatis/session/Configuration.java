@@ -146,6 +146,9 @@ public class Configuration {
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection");
+  /**
+   * 命名空间和缓存对应关系
+   */
   protected final Map<String, Cache> caches = new StrictMap<Cache>("Caches collection");
   protected final Map<String, ResultMap> resultMaps = new StrictMap<ResultMap>("Result Maps collection");
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<ParameterMap>("Parameter Maps collection");
@@ -486,11 +489,11 @@ public class Configuration {
   }
 
   public ReflectorFactory getReflectorFactory() {
-	  return reflectorFactory;
+    return reflectorFactory;
   }
 
   public void setReflectorFactory(ReflectorFactory reflectorFactory) {
-	  this.reflectorFactory = reflectorFactory;
+    this.reflectorFactory = reflectorFactory;
   }
 
   public ObjectFactory getObjectFactory() {
@@ -548,7 +551,7 @@ public class Configuration {
   }
 
   public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
-      ResultHandler resultHandler, BoundSql boundSql) {
+                                              ResultHandler resultHandler, BoundSql boundSql) {
     ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
     resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
     return resultSetHandler;
@@ -889,7 +892,7 @@ public class Configuration {
       }
       if (value instanceof Ambiguity) {
         throw new IllegalArgumentException(((Ambiguity) value).getSubject() + " is ambiguous in " + name
-            + " (try using the full name including the namespace, or rename one of the entries)");
+                + " (try using the full name including the namespace, or rename one of the entries)");
       }
       return value;
     }
@@ -913,3 +916,4 @@ public class Configuration {
   }
 
 }
+

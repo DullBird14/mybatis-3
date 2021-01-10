@@ -37,9 +37,17 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class XMLStatementBuilder extends BaseBuilder {
-
+  /**
+   * 工具处理器
+   */
   private final MapperBuilderAssistant builderAssistant;
+  /**
+   * 当前statement节点
+   */
   private final XNode context;
+  /**
+   *  期望的过滤id
+   */
   private final String requiredDatabaseId;
 
   public XMLStatementBuilder(Configuration configuration, MapperBuilderAssistant builderAssistant, XNode context) {
@@ -54,28 +62,33 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   public void parseStatementNode() {
+    // 获取id
     String id = context.getStringAttribute("id");
     String databaseId = context.getStringAttribute("databaseId");
-
+    // 过滤database
     if (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) {
       return;
     }
-
+    // fetchSize: 建议驱动一次返回多少数据、timeout: 建议驱动返回异常前等待多久
     Integer fetchSize = context.getIntAttribute("fetchSize");
     Integer timeout = context.getIntAttribute("timeout");
     String parameterMap = context.getStringAttribute("parameterMap");
+    // 根据设置值转换类型，默认没设置。自己根据typeHandler推测
     String parameterType = context.getStringAttribute("parameterType");
     Class<?> parameterTypeClass = resolveClass(parameterType);
     String resultMap = context.getStringAttribute("resultMap");
     String resultType = context.getStringAttribute("resultType");
     String lang = context.getStringAttribute("lang");
+    // 获取对应的驱动
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     Class<?> resultTypeClass = resolveClass(resultType);
     String resultSetType = context.getStringAttribute("resultSetType");
+    // 获取 StatementType 类型，这会让 MyBatis 分别使用 Statement，PreparedStatement 或 CallableStatement，默认值：PREPARED。 todo 不知道干嘛的
     StatementType statementType = StatementType.valueOf(context.getStringAttribute("statementType", StatementType.PREPARED.toString()));
+    // resultSetType 对应的类型，todo 不知道干嘛的
     ResultSetType resultSetTypeEnum = resolveResultSetType(resultSetType);
-
+    // 设置类型。  UNKNOWN, INSERT, UPDATE, DELETE, SELECT, FLUSH;
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
@@ -84,45 +97,57 @@ public class XMLStatementBuilder extends BaseBuilder {
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
 
     // Include Fragments before parsing
+    // <10> 创建 XMLIncludeTransformer 对象，并替换 <include /> 标签相关的内容
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
     includeParser.applyIncludes(context.getNode());
 
     // Parse selectKey after includes and remove them.
+    // 替换<selectKey /> 标签
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
-    
+
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
+    // 创建 sqlSource,前提是 selectKey 和 include 已经处理了
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
     String keyProperty = context.getStringAttribute("keyProperty");
     String keyColumn = context.getStringAttribute("keyColumn");
+    // 获取 KeyGenerator
     KeyGenerator keyGenerator;
     String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
+    // 根据命名空间 构建 keyStatementId
     keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, true);
     if (configuration.hasKeyGenerator(keyStatementId)) {
+      // 如果存在。说明上面配置的selectKey已经创建
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
+      // 找不到用全局的
       keyGenerator = context.getBooleanAttribute("useGeneratedKeys",
-          configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
-          ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
+              configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
+              ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
     }
-
+    // 创建MappedStatement
     builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
-        fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
-        resultSetTypeEnum, flushCache, useCache, resultOrdered, 
-        keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets);
+            fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
+            resultSetTypeEnum, flushCache, useCache, resultOrdered,
+            keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets);
   }
 
   private void processSelectKeyNodes(String id, Class<?> parameterTypeClass, LanguageDriver langDriver) {
+    // 获取 selectKey 节点
     List<XNode> selectKeyNodes = context.evalNodes("selectKey");
     if (configuration.getDatabaseId() != null) {
+      // 增加了数据库筛选
       parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, configuration.getDatabaseId());
     }
+    // 解析 SelectKey
     parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, null);
+    // 移除 SelectKey节点
     removeSelectKeyNodes(selectKeyNodes);
   }
 
   private void parseSelectKeyNodes(String parentId, List<XNode> list, Class<?> parameterTypeClass, LanguageDriver langDriver, String skRequiredDatabaseId) {
     for (XNode nodeToHandle : list) {
+      // selectKey子节点 {}
       String id = parentId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
       String databaseId = nodeToHandle.getStringAttribute("databaseId");
       if (databaseIdMatchesCurrent(id, databaseId, skRequiredDatabaseId)) {
@@ -132,6 +157,8 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   private void parseSelectKeyNode(String id, XNode nodeToHandle, Class<?> parameterTypeClass, LanguageDriver langDriver, String databaseId) {
+
+    // 解析属性
     String resultType = nodeToHandle.getStringAttribute("resultType");
     Class<?> resultTypeClass = resolveClass(resultType);
     StatementType statementType = StatementType.valueOf(nodeToHandle.getStringAttribute("statementType", StatementType.PREPARED.toString()));
@@ -149,18 +176,19 @@ public class XMLStatementBuilder extends BaseBuilder {
     String parameterMap = null;
     String resultMap = null;
     ResultSetType resultSetTypeEnum = null;
-
+    // 创建SqlSource
     SqlSource sqlSource = langDriver.createSqlSource(configuration, nodeToHandle, parameterTypeClass);
     SqlCommandType sqlCommandType = SqlCommandType.SELECT;
-
+    // 创建MappedStatement
     builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
-        fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
-        resultSetTypeEnum, flushCache, useCache, resultOrdered,
-        keyGenerator, keyProperty, keyColumn, databaseId, langDriver, null);
-
+            fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
+            resultSetTypeEnum, flushCache, useCache, resultOrdered,
+            keyGenerator, keyProperty, keyColumn, databaseId, langDriver, null);
+    // {namespace}.{methodId}+"!selectKey"
     id = builderAssistant.applyCurrentNamespace(id, false);
-
+    // 获取，其实是上面创建的
     MappedStatement keyStatement = configuration.getMappedStatement(id, false);
+    // 添加 KeyGenerator
     configuration.addKeyGenerator(id, new SelectKeyGenerator(keyStatement, executeBefore));
   }
 
@@ -194,6 +222,7 @@ public class XMLStatementBuilder extends BaseBuilder {
   private LanguageDriver getLanguageDriver(String lang) {
     Class<?> langClass = null;
     if (lang != null) {
+      //找到对应的类
       langClass = resolveClass(lang);
     }
     return builderAssistant.getLanguageDriver(langClass);
