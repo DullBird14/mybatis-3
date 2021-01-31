@@ -177,6 +177,7 @@ public class XMLScriptBuilder extends BaseBuilder {
 
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
+      //先解析。如果内部还有标签，递归解析
       MixedSqlNode mixedSqlNode = parseDynamicTags(nodeToHandle);
       WhereSqlNode where = new WhereSqlNode(configuration, mixedSqlNode);
       targetContents.add(where);
