@@ -22,17 +22,24 @@ import org.apache.ibatis.parsing.TokenHandler;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * <foreach></>
  * @author Clinton Begin
  */
 public class ForEachSqlNode implements SqlNode {
   public static final String ITEM_PREFIX = "__frch_";
 
   private final ExpressionEvaluator evaluator;
+  /**
+   * 表达参数
+   */
   private final String collectionExpression;
   private final SqlNode contents;
   private final String open;
   private final String close;
   private final String separator;
+  /**
+   *  集合项目
+   */
   private final String item;
   private final String index;
   private final Configuration configuration;
@@ -52,24 +59,29 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
+    // 获取表达式变量
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
     }
     boolean first = true;
+    // 写入open的 sql语句
     applyOpen(context);
     int i = 0;
     for (Object o : iterable) {
+      // 记录旧的 DynamicContext
       DynamicContext oldContext = context;
       if (first || separator == null) {
+        // 第一次不需要分割，比如,1是不需要的
         context = new PrefixedContext(context, "");
       } else {
         context = new PrefixedContext(context, separator);
       }
+      // 获取唯一编号
       int uniqueNumber = context.getUniqueNumber();
-      // Issue #709 
+      // Issue #709
       if (o instanceof Map.Entry) {
-        @SuppressWarnings("unchecked") 
+        @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
@@ -77,14 +89,17 @@ public class ForEachSqlNode implements SqlNode {
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 执行 contents SqlNode的方法
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
       if (first) {
+        // 如果是首次
         first = !((PrefixedContext) context).isPrefixApplied();
       }
       context = oldContext;
       i++;
     }
     applyClose(context);
+    // 移除item 和index的绑定
     context.getBindings().remove(item);
     context.getBindings().remove(index);
     return true;
@@ -92,6 +107,7 @@ public class ForEachSqlNode implements SqlNode {
 
   private void applyIndex(DynamicContext context, Object o, int i) {
     if (index != null) {
+      //添加到bindings中
       context.bind(index, o);
       context.bind(itemizeItem(index, i), o);
     }
@@ -99,6 +115,7 @@ public class ForEachSqlNode implements SqlNode {
 
   private void applyItem(DynamicContext context, Object o, int i) {
     if (item != null) {
+      //添加到bindings中
       context.bind(item, o);
       context.bind(itemizeItem(item, i), o);
     }
@@ -172,10 +189,15 @@ public class ForEachSqlNode implements SqlNode {
 
   }
 
-
+  /**
+   * 分割符号相关的context
+   */
   private class PrefixedContext extends DynamicContext {
     private final DynamicContext delegate;
     private final String prefix;
+    /**
+     * 是否已经应用前缀
+     */
     private boolean prefixApplied;
 
     public PrefixedContext(DynamicContext delegate, String prefix) {
@@ -201,6 +223,7 @@ public class ForEachSqlNode implements SqlNode {
 
     @Override
     public void appendSql(String sql) {
+      // 添加前缀
       if (!prefixApplied && sql != null && sql.trim().length() > 0) {
         delegate.appendSql(prefix);
         prefixApplied = true;
@@ -220,3 +243,4 @@ public class ForEachSqlNode implements SqlNode {
   }
 
 }
+

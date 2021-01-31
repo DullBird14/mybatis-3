@@ -55,17 +55,19 @@ public abstract class BaseStatementHandler implements StatementHandler {
     this.executor = executor;
     this.mappedStatement = mappedStatement;
     this.rowBounds = rowBounds;
-
+    // 获取类型处理注册器
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.objectFactory = configuration.getObjectFactory();
-
+    // 一般是写操作。boundSql是为null
     if (boundSql == null) { // issue #435, get the key before calculating the statement
+      // 获取自增主键
       generateKeys(parameterObject);
+      // BoundSql
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
     this.boundSql = boundSql;
-
+    // ParameterHandler, ResultSetHandler
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }
@@ -85,8 +87,11 @@ public abstract class BaseStatementHandler implements StatementHandler {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
+      // 创建Statement
       statement = instantiateStatement(connection);
+      // 设置超时时间
       setStatementTimeout(statement, transactionTimeout);
+      // 设置 FetchSize //todo 干嘛用的?
       setFetchSize(statement);
       return statement;
     } catch (SQLException e) {
@@ -102,14 +107,17 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
   protected void setStatementTimeout(Statement stmt, Integer transactionTimeout) throws SQLException {
     Integer queryTimeout = null;
+    // 超时时间。局部的，和全局中获取
     if (mappedStatement.getTimeout() != null) {
       queryTimeout = mappedStatement.getTimeout();
     } else if (configuration.getDefaultStatementTimeout() != null) {
       queryTimeout = configuration.getDefaultStatementTimeout();
     }
+    // 如果存在就设置
     if (queryTimeout != null) {
       stmt.setQueryTimeout(queryTimeout);
     }
+    // 设置事务超时时间
     StatementUtil.applyTransactionTimeout(stmt, queryTimeout, transactionTimeout);
   }
 
@@ -136,8 +144,10 @@ public abstract class BaseStatementHandler implements StatementHandler {
   }
 
   protected void generateKeys(Object parameter) {
+    // 获取 KeyGenerator
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     ErrorContext.instance().store();
+    // 添加自增主键到 parameter··
     keyGenerator.processBefore(executor, mappedStatement, null, parameter);
     ErrorContext.instance().recall();
   }

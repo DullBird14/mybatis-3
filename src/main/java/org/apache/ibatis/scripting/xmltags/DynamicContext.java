@@ -30,25 +30,42 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class DynamicContext {
-
+  /**
+   * 参数
+   */
   public static final String PARAMETER_OBJECT_KEY = "_parameter";
+  /**
+   * 数据库编号
+   */
   public static final String DATABASE_ID_KEY = "_databaseId";
 
   static {
+    // 设置OGNL工具
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
+  /**
+   * 上下文参数
+   */
   private final ContextMap bindings;
+  /**
+   * 生成后的sql
+   */
   private final StringBuilder sqlBuilder = new StringBuilder();
+  /**
+   * 唯一编号。在 {@link org.apache.ibatis.scripting.xmltags.XMLScriptBuilder.ForEachHandler} 使用
+   */
   private int uniqueNumber = 0;
 
   public DynamicContext(Configuration configuration, Object parameterObject) {
+    // 初始化 参数
     if (parameterObject != null && !(parameterObject instanceof Map)) {
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
       bindings = new ContextMap(metaObject);
     } else {
       bindings = new ContextMap(null);
     }
+    // bindings 的默认值
     bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
     bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
   }
@@ -76,7 +93,9 @@ public class DynamicContext {
 
   static class ContextMap extends HashMap<String, Object> {
     private static final long serialVersionUID = 2977601501966151582L;
-
+    /**
+     * parameter 对应的 MetaObject 对象
+     */
     private MetaObject parameterMetaObject;
     public ContextMap(MetaObject parameterMetaObject) {
       this.parameterMetaObject = parameterMetaObject;
@@ -85,10 +104,11 @@ public class DynamicContext {
     @Override
     public Object get(Object key) {
       String strKey = (String) key;
+      // 委托给map
       if (super.containsKey(strKey)) {
         return super.get(strKey);
       }
-
+      // 如果参数不为null 就从中获取
       if (parameterMetaObject != null) {
         // issue #61 do not modify the context when reading
         return parameterMetaObject.getValue(strKey);
@@ -102,7 +122,7 @@ public class DynamicContext {
 
     @Override
     public Object getProperty(Map context, Object target, Object name)
-        throws OgnlException {
+            throws OgnlException {
       Map map = (Map) target;
 
       Object result = map.get(name);
@@ -120,7 +140,7 @@ public class DynamicContext {
 
     @Override
     public void setProperty(Map context, Object target, Object name, Object value)
-        throws OgnlException {
+            throws OgnlException {
       Map<Object, Object> map = (Map<Object, Object>) target;
       map.put(name, value);
     }

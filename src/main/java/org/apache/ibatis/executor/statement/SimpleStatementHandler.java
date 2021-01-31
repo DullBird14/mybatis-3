@@ -43,14 +43,17 @@ public class SimpleStatementHandler extends BaseStatementHandler {
   @Override
   public int update(Statement statement) throws SQLException {
     String sql = boundSql.getSql();
+    // 获取 parameterObject 和 keyGenerator
     Object parameterObject = boundSql.getParameterObject();
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     int rows;
+    // 如果是 Jdbc3KeyGenerator
     if (keyGenerator instanceof Jdbc3KeyGenerator) {
       statement.execute(sql, Statement.RETURN_GENERATED_KEYS);
       rows = statement.getUpdateCount();
       keyGenerator.processAfter(executor, mappedStatement, statement, parameterObject);
     } else if (keyGenerator instanceof SelectKeyGenerator) {
+      // 如果是SelectKeyGenerator
       statement.execute(sql);
       rows = statement.getUpdateCount();
       keyGenerator.processAfter(executor, mappedStatement, statement, parameterObject);
@@ -64,13 +67,16 @@ public class SimpleStatementHandler extends BaseStatementHandler {
   @Override
   public void batch(Statement statement) throws SQLException {
     String sql = boundSql.getSql();
+    // 添加到批处理
     statement.addBatch(sql);
   }
 
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
     String sql = boundSql.getSql();
+    // 执行查询
     statement.execute(sql);
+    // 返回结果
     return resultSetHandler.<E>handleResultSets(statement);
   }
 

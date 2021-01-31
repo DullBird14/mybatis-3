@@ -179,7 +179,7 @@ public final class MappedStatement {
       mappedStatement.resultSets = delimitedStringToArray(resultSet);
       return this;
     }
-    
+
     public MappedStatement build() {
       assert mappedStatement.configuration != null;
       assert mappedStatement.id != null;
@@ -287,15 +287,18 @@ public final class MappedStatement {
   public String[] getResulSets() {
     return resultSets;
   }
-  
+
   public BoundSql getBoundSql(Object parameterObject) {
+    // 获取 BoundSql
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    // 忽略
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
     // check for nested result maps in parameter mappings (issue #30)
+    // 判断内嵌的result
     for (ParameterMapping pm : boundSql.getParameterMappings()) {
       String rmId = pm.getResultMapId();
       if (rmId != null) {
@@ -318,3 +321,4 @@ public final class MappedStatement {
   }
 
 }
+

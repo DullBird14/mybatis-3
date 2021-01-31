@@ -142,7 +142,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
       // 解析 resultMap
       resultMapElements(context.evalNodes("/mapper/resultMap"));
-      // 解析sql
+      // 解析sql,需要先解析。下面会用到
       sqlElement(context.evalNodes("/mapper/sql"));
       // 解析 增删改查
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));

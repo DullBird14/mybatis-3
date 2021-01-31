@@ -21,11 +21,11 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
-    <properties >
-        <property name="testKeyA" value="testValueA"/>
-        <property name="testKeyB" value="testValueB"/>
+    <properties>
+        <property name="cpu" value="16c" />
+        <property name="target_sql" value="123" />
     </properties>
-<!--    <settings>&lt;!&ndash;用来配置configuration的的参数，不存在的不可以配置&ndash;&gt;</settings>-->
+    <!--    <settings>&lt;!&ndash;用来配置configuration的的参数，不存在的不可以配置&ndash;&gt;</settings>-->
     <!-- autoMappingBehavior should be set in each test case -->
     <environments default="development">
         <environment id="development">
@@ -41,7 +41,6 @@
     </environments>
 
     <mappers>
-        <mapper resource="org/apache/ibatis/autoconstructor/AutoConstructorMapper.xml"/>
+        <mapper resource="org/apache/ibatis/dullbird/myTestMapper.xml"/>
     </mappers>
-
 </configuration>

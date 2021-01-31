@@ -36,7 +36,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
- * @author Jeff Butler 
+ * 批处理 Executor 先跳过
+ * @author Jeff Butler
  */
 public class BatchExecutor extends BaseExecutor {
 
@@ -62,7 +63,7 @@ public class BatchExecutor extends BaseExecutor {
       int last = statementList.size() - 1;
       stmt = statementList.get(last);
       applyTransactionTimeout(stmt);
-     handler.parameterize(stmt);//fix Issues 322
+      handler.parameterize(stmt);//fix Issues 322
       BatchResult batchResult = batchResultList.get(last);
       batchResult.addParameterObject(parameterObject);
     } else {
@@ -74,14 +75,14 @@ public class BatchExecutor extends BaseExecutor {
       statementList.add(stmt);
       batchResultList.add(new BatchResult(ms, sql, parameterObject));
     }
-  // handler.parameterize(stmt);
+    // handler.parameterize(stmt);
     handler.batch(stmt);
     return BATCH_UPDATE_RETURN_VALUE;
   }
 
   @Override
   public <E> List<E> doQuery(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)
-      throws SQLException {
+          throws SQLException {
     Statement stmt = null;
     try {
       flushStatements();
@@ -136,14 +137,14 @@ public class BatchExecutor extends BaseExecutor {
         } catch (BatchUpdateException e) {
           StringBuilder message = new StringBuilder();
           message.append(batchResult.getMappedStatement().getId())
-              .append(" (batch index #")
-              .append(i + 1)
-              .append(")")
-              .append(" failed.");
+                  .append(" (batch index #")
+                  .append(i + 1)
+                  .append(")")
+                  .append(" failed.");
           if (i > 0) {
             message.append(" ")
-                .append(i)
-                .append(" prior sub executor(s) completed successfully, but will be rolled back.");
+                    .append(i)
+                    .append(" prior sub executor(s) completed successfully, but will be rolled back.");
           }
           throw new BatchExecutorException(message.toString(), e, results, batchResult);
         }
@@ -161,3 +162,4 @@ public class BatchExecutor extends BaseExecutor {
   }
 
 }
+

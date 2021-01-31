@@ -34,10 +34,15 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 每次开始读或写操作，优先从缓存中获取对应的 Statement 对象。如果不存在，才进行创建。
+ * 执行完成后，不关闭该 Statement 对象。
+ * 其它的，和 SimpleExecutor 是一致的。
  * @author Clinton Begin
  */
 public class ReuseExecutor extends BaseExecutor {
-
+  /**
+   * Statement的缓存
+   */
   private final Map<String, Statement> statementMap = new HashMap<String, Statement>();
 
   public ReuseExecutor(Configuration configuration, Transaction transaction) {
@@ -71,6 +76,7 @@ public class ReuseExecutor extends BaseExecutor {
   @Override
   public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
     for (Statement stmt : statementMap.values()) {
+      // 关闭 Statement
       closeStatement(stmt);
     }
     statementMap.clear();
@@ -81,11 +87,14 @@ public class ReuseExecutor extends BaseExecutor {
     Statement stmt;
     BoundSql boundSql = handler.getBoundSql();
     String sql = boundSql.getSql();
+    // 查找是否已经 Statement
     if (hasStatementFor(sql)) {
       stmt = getStatement(sql);
       applyTransactionTimeout(stmt);
     } else {
+      // 获取链接
       Connection connection = getConnection(statementLog);
+      // 准备 Statement，放入缓存
       stmt = handler.prepare(connection, transaction.getTimeout());
       putStatement(sql, stmt);
     }

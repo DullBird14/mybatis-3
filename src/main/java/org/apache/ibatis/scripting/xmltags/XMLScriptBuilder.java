@@ -30,13 +30,25 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * 解析<script>
  * @author Clinton Begin
  */
 public class XMLScriptBuilder extends BaseBuilder {
-
+  /**
+   * 当前节点
+   */
   private final XNode context;
+  /**
+   * 是否动态类型
+   */
   private boolean isDynamic;
+  /**
+   * 参数类型
+   */
   private final Class<?> parameterType;
+  /**
+   * NodeHandler处理器
+   */
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<String, NodeHandler>();
 
   public XMLScriptBuilder(Configuration configuration, XNode context) {
@@ -47,11 +59,13 @@ public class XMLScriptBuilder extends BaseBuilder {
     super(configuration);
     this.context = context;
     this.parameterType = parameterType;
+    // 初始化 nodeHandlerMap 属性
     initNodeHandlerMap();
   }
 
 
   private void initNodeHandlerMap() {
+    // 添加动态标签的处理器
     nodeHandlerMap.put("trim", new TrimHandler());
     nodeHandlerMap.put("where", new WhereHandler());
     nodeHandlerMap.put("set", new SetHandler());
@@ -64,11 +78,14 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   public SqlSource parseScriptNode() {
+    // 解析动态标签
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource = null;
     if (isDynamic) {
+      // 如果是动态的生成 DynamicSqlSource
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
+      // 如果是静态的生成 RawSqlSource
       sqlSource = new RawSqlSource(configuration, rootSqlNode, parameterType);
     }
     return sqlSource;
@@ -78,30 +95,44 @@ public class XMLScriptBuilder extends BaseBuilder {
     List<SqlNode> contents = new ArrayList<SqlNode>();
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
+      // 当前子节点
       XNode child = node.newXNode(children.item(i));
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
+        // 如果是 CDATA_SECTION_NODE 或 TEXT_NODE 获取内容
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
         if (textSqlNode.isDynamic()) {
+          // 如果是动态。添加 TextSqlNode
           contents.add(textSqlNode);
+          // 标记为动态
           isDynamic = true;
         } else {
+          // 如果不是动态设置 StaticTextSqlNode
           contents.add(new StaticTextSqlNode(data));
         }
       } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
+        // 如果是ELEMENT_NODE,获取标签的名称
         String nodeName = child.getNode().getNodeName();
+        //  获取标签对应的处理器，不存在就报错
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
+        // 执行标签的处理器
         handler.handleNode(child, contents);
         isDynamic = true;
       }
     }
+    //创建 MixedSqlNode
     return new MixedSqlNode(contents);
   }
 
   private interface NodeHandler {
+    /**
+     * 动态sql标签的node的处理器
+     * @param nodeToHandle 待处理的节点
+     * @param targetContents 节点处理完之后回添加到这个数组
+     */
     void handleNode(XNode nodeToHandle, List<SqlNode> targetContents);
   }
 
@@ -126,11 +157,14 @@ public class XMLScriptBuilder extends BaseBuilder {
 
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
+      // 先解析。如果内部还有标签，递归解析
       MixedSqlNode mixedSqlNode = parseDynamicTags(nodeToHandle);
+      // 获取参数
       String prefix = nodeToHandle.getStringAttribute("prefix");
       String prefixOverrides = nodeToHandle.getStringAttribute("prefixOverrides");
       String suffix = nodeToHandle.getStringAttribute("suffix");
       String suffixOverrides = nodeToHandle.getStringAttribute("suffixOverrides");
+      // 构造 TrimSqlNode 节点
       TrimSqlNode trim = new TrimSqlNode(configuration, mixedSqlNode, prefix, prefixOverrides, suffix, suffixOverrides);
       targetContents.add(trim);
     }
@@ -247,3 +281,4 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
 }
+

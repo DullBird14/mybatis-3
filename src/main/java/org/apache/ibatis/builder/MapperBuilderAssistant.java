@@ -289,14 +289,14 @@ public class MapperBuilderAssistant extends BaseBuilder {
           String databaseId,
           LanguageDriver lang,
           String resultSets) {
-
+    // 缓存未成功解析
     if (unresolvedCacheRef) {
       throw new IncompleteElementException("Cache-ref not yet resolved");
     }
-
+    // 获取命名空间id
     id = applyCurrentNamespace(id, false);
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
-
+    // 创建  MappedStatement.Builder
     MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlSource, sqlCommandType)
             .resource(resource)
             .fetchSize(fetchSize)
@@ -314,12 +314,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
             .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
             .useCache(valueOrDefault(useCache, isSelect))
             .cache(currentCache);
-
+    // 获取 ParameterMap
     ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
     if (statementParameterMap != null) {
       statementBuilder.parameterMap(statementParameterMap);
     }
-
+    // 创建 MappedStatement
     MappedStatement statement = statementBuilder.build();
     configuration.addMappedStatement(statement);
     return statement;
@@ -356,10 +356,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
           String resultMap,
           Class<?> resultType,
           String statementId) {
+    // 获取命名空间
     resultMap = applyCurrentNamespace(resultMap, true);
 
     List<ResultMap> resultMaps = new ArrayList<ResultMap>();
     if (resultMap != null) {
+      // 获取resultMap,"," 处理一次查询返回2个resultMap的情况
       String[] resultMapNames = resultMap.split(",");
       for (String resultMapName : resultMapNames) {
         try {
@@ -369,6 +371,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         }
       }
     } else if (resultType != null) {
+      // 如果resultType不为空。就创建 ResultMap
       ResultMap inlineResultMap = new ResultMap.Builder(
               configuration,
               statementId + "-Inline",
@@ -538,4 +541,5 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
 }
+
 

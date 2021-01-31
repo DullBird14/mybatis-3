@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -13,21 +13,16 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package org.apache.ibatis.executor.parameter;
+package org.apache.ibatis.dullbird;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.autoconstructor.AnnotatedSubject;
+import org.apache.ibatis.autoconstructor.BadSubject;
+import org.apache.ibatis.autoconstructor.PrimitiveSubject;
+import org.apache.ibatis.autoconstructor.WrapperSubject;
 
-/**
- * A parameter handler sets the parameters of the {@code PreparedStatement}
- * sql的类型处理。占位处理
- * @author Clinton Begin
- */
-public interface ParameterHandler {
+import java.util.List;
 
-  Object getParameterObject();
-
-  void setParameters(PreparedStatement ps)
-          throws SQLException;
-
+public interface MyTestMapper {
+    void testForInclude();
 }
