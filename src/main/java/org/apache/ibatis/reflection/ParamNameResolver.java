@@ -51,13 +51,13 @@ public class ParamNameResolver {
   private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
-    final Class<?>[] paramTypes = method.getParameterTypes();
-    final Annotation[][] paramAnnotations = method.getParameterAnnotations();
+    final Class<?>[] paramTypes = method.getParameterTypes();// 获取方法的参数类型
+    final Annotation[][] paramAnnotations = method.getParameterAnnotations();//获取方法上面的注解@Param
     final SortedMap<Integer, String> map = new TreeMap<Integer, String>();
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
-      if (isSpecialParameter(paramTypes[paramIndex])) {
+      if (isSpecialParameter(paramTypes[paramIndex])) {// 如果是特殊的参数就跳过
         // skip special parameters
         continue;
       }
@@ -112,20 +112,20 @@ public class ParamNameResolver {
    * </p>
    */
   public Object getNamedParams(Object[] args) {
-    final int paramCount = names.size();
-    if (args == null || paramCount == 0) {
+    final int paramCount = names.size();// 获取参数数量
+    if (args == null || paramCount == 0) {// 如果参数是null
       return null;
-    } else if (!hasParamAnnotation && paramCount == 1) {
+    } else if (!hasParamAnnotation && paramCount == 1) {// 如果没有@Param注解。并且参数只有1个
       return args[names.firstKey()];
     } else {
       final Map<String, Object> param = new ParamMap<Object>();
       int i = 0;
-      for (Map.Entry<Integer, String> entry : names.entrySet()) {
-        param.put(entry.getValue(), args[entry.getKey()]);
+      for (Map.Entry<Integer, String> entry : names.entrySet()) {// 遍历解析的参数
+        param.put(entry.getValue(), args[entry.getKey()]);//放入params
         // add generic param names (param1, param2, ...)
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
-        if (!names.containsValue(genericParamName)) {
+        if (!names.containsValue(genericParamName)) {// 如果没有param*,就放入
           param.put(genericParamName, args[entry.getKey()]);
         }
         i++;

@@ -26,12 +26,15 @@ import java.util.Set;
 import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
+ * 实现了 InvocationHandler 的处理器
  * @author Clinton Begin
  */
 public class Plugin implements InvocationHandler {
-
+  //目标对象
   private final Object target;
+  // 拦截器方法
   private final Interceptor interceptor;
+  // 签名map
   private final Map<Class<?>, Set<Method>> signatureMap;
 
   private Plugin(Object target, Interceptor interceptor, Map<Class<?>, Set<Method>> signatureMap) {
@@ -41,14 +44,18 @@ public class Plugin implements InvocationHandler {
   }
 
   public static Object wrap(Object target, Interceptor interceptor) {
+    // 获取<class, Set<Method>>Map,可以多个Signature是同一个type.class
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
+    // 目标的class
     Class<?> type = target.getClass();
+    // 获取 target.getClass() 所有匹配到的接口
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
+      // 创建jdk代理对象
       return Proxy.newProxyInstance(
-          type.getClassLoader(),
-          interfaces,
-          new Plugin(target, interceptor, signatureMap));
+              type.getClassLoader(),
+              interfaces,
+              new Plugin(target, interceptor, signatureMap));
     }
     return target;
   }
@@ -70,9 +77,10 @@ public class Plugin implements InvocationHandler {
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     // issue #251
     if (interceptsAnnotation == null) {
-      throw new PluginException("No @Intercepts annotation was found in interceptor " + interceptor.getClass().getName());      
+      throw new PluginException("No @Intercepts annotation was found in interceptor " + interceptor.getClass().getName());
     }
     Signature[] sigs = interceptsAnnotation.value();
+    // <type.class, Set<Method>>的映射
     Map<Class<?>, Set<Method>> signatureMap = new HashMap<Class<?>, Set<Method>>();
     for (Signature sig : sigs) {
       Set<Method> methods = signatureMap.get(sig.type());
@@ -81,6 +89,7 @@ public class Plugin implements InvocationHandler {
         signatureMap.put(sig.type(), methods);
       }
       try {
+        // 反射取 Method
         Method method = sig.type().getMethod(sig.method(), sig.args());
         methods.add(method);
       } catch (NoSuchMethodException e) {

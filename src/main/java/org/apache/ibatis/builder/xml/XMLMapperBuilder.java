@@ -481,6 +481,7 @@ public class XMLMapperBuilder extends BaseBuilder {
           // look at MapperAnnotationBuilder#loadXmlResource
           // 添加到已加载资源中
           configuration.addLoadedResource("namespace:" + namespace);
+          // 添加到MapperRegistry中
           configuration.addMapper(boundType);
         }
       }
@@ -488,3 +489,4 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
 }
+

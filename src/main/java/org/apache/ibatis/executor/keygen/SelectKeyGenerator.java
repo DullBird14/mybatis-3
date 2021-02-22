@@ -27,13 +27,23 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.RowBounds;
 
 /**
+ * 从数据库查询主键
  * @author Clinton Begin
  * @author Jeff Butler
  */
 public class SelectKeyGenerator implements KeyGenerator {
-  
+
   public static final String SELECT_KEY_SUFFIX = "!selectKey";
+  /**
+   * 是否在 before 阶段执行
+   *
+   * true ：before
+   * after ：after
+   */
   private final boolean executeBefore;
+  /**
+   * MappedStatement 对象
+   */
   private final MappedStatement keyStatement;
 
   public SelectKeyGenerator(MappedStatement keyStatement, boolean executeBefore) {
@@ -64,15 +74,18 @@ public class SelectKeyGenerator implements KeyGenerator {
         if (keyProperties != null) {
           // Do not close keyExecutor.
           // The transaction will be closed by parent executor.
+          // 创建一个 Executor
           Executor keyExecutor = configuration.newExecutor(executor.getTransaction(), ExecutorType.SIMPLE);
+          // 执行 Executor
           List<Object> values = keyExecutor.query(keyStatement, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER);
           if (values.size() == 0) {
-            throw new ExecutorException("SelectKey returned no data.");            
+            throw new ExecutorException("SelectKey returned no data.");
           } else if (values.size() > 1) {
             throw new ExecutorException("SelectKey returned more than one value.");
           } else {
             MetaObject metaResult = configuration.newMetaObject(values.get(0));
             if (keyProperties.length == 1) {
+              //单个主键
               if (metaResult.hasGetter(keyProperties[0])) {
                 setValue(metaParam, keyProperties[0], metaResult.getValue(keyProperties[0]));
               } else {
@@ -81,6 +94,7 @@ public class SelectKeyGenerator implements KeyGenerator {
                 setValue(metaParam, keyProperties[0], values.get(0));
               }
             } else {
+              // 多主键
               handleMultipleProperties(keyProperties, metaParam, metaResult);
             }
           }
@@ -94,9 +108,9 @@ public class SelectKeyGenerator implements KeyGenerator {
   }
 
   private void handleMultipleProperties(String[] keyProperties,
-      MetaObject metaParam, MetaObject metaResult) {
+                                        MetaObject metaParam, MetaObject metaResult) {
     String[] keyColumns = keyStatement.getKeyColumns();
-      
+
     if (keyColumns == null || keyColumns.length == 0) {
       // no key columns specified, just use the property names
       for (String keyProperty : keyProperties) {

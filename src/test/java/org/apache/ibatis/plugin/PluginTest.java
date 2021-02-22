@@ -39,16 +39,21 @@ public class PluginTest {
     assertFalse("Always".equals(map.toString()));
   }
 
+  /**
+   * Signature描述了拦截什么类型的什么方法，入参是什么。
+   */
   @Intercepts({
-      @Signature(type = Map.class, method = "get", args = {Object.class})})
+          @Signature(type = Map.class, method = "get", args = {Object.class})})
   public static class AlwaysMapPlugin implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
+      // 执行invocation.proceed();
       return "Always";
     }
 
     @Override
     public Object plugin(Object target) {
+      // 返回代理对象
       return Plugin.wrap(target, this);
     }
 

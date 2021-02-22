@@ -221,7 +221,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
         // 设置属性
         interceptorInstance.setProperties(properties);
-        // 添加到拦截器中
+        // 把拦截器添加到 interceptorChain 中
         configuration.addInterceptor(interceptorInstance);
       }
     }
@@ -248,9 +248,9 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void reflectorFactoryElement(XNode context) throws Exception {
     if (context != null) {
-       String type = context.getStringAttribute("type");
-       ReflectorFactory factory = (ReflectorFactory) resolveClass(type).newInstance();
-       configuration.setReflectorFactory(factory);
+      String type = context.getStringAttribute("type");
+      ReflectorFactory factory = (ReflectorFactory) resolveClass(type).newInstance();
+      configuration.setReflectorFactory(factory);
     }
   }
 
@@ -329,8 +329,8 @@ public class XMLConfigBuilder extends BaseBuilder {
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
           Environment.Builder environmentBuilder = new Environment.Builder(id)
-              .transactionFactory(txFactory)
-              .dataSource(dataSource);
+                  .transactionFactory(txFactory)
+                  .dataSource(dataSource);
           configuration.setEnvironment(environmentBuilder.build());
         }
       }
@@ -343,7 +343,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       String type = context.getStringAttribute("type");
       // awful patch to keep backward compatibility
       if ("VENDOR".equals(type)) {
-          type = "DB_VENDOR";
+        type = "DB_VENDOR";
       }
       Properties properties = context.getChildrenAsProperties();
       databaseIdProvider = (DatabaseIdProvider) resolveClass(type).newInstance();
@@ -459,3 +459,4 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
 }
+

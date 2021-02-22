@@ -21,11 +21,25 @@ import java.util.Properties;
  * @author Clinton Begin
  */
 public interface Interceptor {
-
+  /**
+   * 拦截方法
+   * @param invocation
+   * @return
+   * @throws Throwable
+   */
   Object intercept(Invocation invocation) throws Throwable;
 
+  /**
+   * 应用插件
+   * @param target 目标对象
+   * @return
+   */
   Object plugin(Object target);
 
+  /**
+   * 设置拦截器属性
+   * @param properties
+   */
   void setProperties(Properties properties);
 
 }

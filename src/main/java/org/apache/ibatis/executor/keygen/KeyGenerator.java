@@ -21,12 +21,13 @@ import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 
 /**
+ * 自增主键的生成接口
  * @author Clinton Begin
  */
 public interface KeyGenerator {
-
+  // sql执行前生成
   void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter);
-
+  // sql执行后生成
   void processAfter(Executor executor, MappedStatement ms, Statement stmt, Object parameter);
 
 }

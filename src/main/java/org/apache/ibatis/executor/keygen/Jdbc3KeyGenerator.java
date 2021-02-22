@@ -42,6 +42,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public class Jdbc3KeyGenerator implements KeyGenerator {
 
   /**
+   * 共享的单例
    * A shared instance.
    * @since 3.4.3
    */
@@ -49,7 +50,7 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
 
   @Override
   public void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
-    // do nothing
+    // do nothing 什么也不做
   }
 
   @Override
@@ -60,22 +61,28 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   public void processBatch(MappedStatement ms, Statement stmt, Collection<Object> parameters) {
     ResultSet rs = null;
     try {
+      // 获取返回的自增主键
       rs = stmt.getGeneratedKeys();
       final Configuration configuration = ms.getConfiguration();
       final TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+      // 获取自增主键的配置
       final String[] keyProperties = ms.getKeyProperties();
       final ResultSetMetaData rsmd = rs.getMetaData();
       TypeHandler<?>[] typeHandlers = null;
       if (keyProperties != null && rsmd.getColumnCount() >= keyProperties.length) {
+        // 如果 配置不为null，并且配置的长度大于返回的结果长度
         for (Object parameter : parameters) {
           // there should be one row for each statement (also one for each parameter)
           if (!rs.next()) {
+            // 如果没有返回的主键的情况
             break;
           }
           final MetaObject metaParam = configuration.newMetaObject(parameter);
           if (typeHandlers == null) {
+            // 如果类型处理器没有，先获取类型处理器
             typeHandlers = getTypeHandlers(typeHandlerRegistry, metaParam, keyProperties, rsmd);
           }
+          // 给 parameter 设置id
           populateKeys(rs, metaParam, keyProperties, typeHandlers);
         }
       }
@@ -114,12 +121,15 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   }
 
   private TypeHandler<?>[] getTypeHandlers(TypeHandlerRegistry typeHandlerRegistry, MetaObject metaParam, String[] keyProperties, ResultSetMetaData rsmd) throws SQLException {
+    // 获得主键们，对应的每个属性的，对应的 TypeHandler 对象
     TypeHandler<?>[] typeHandlers = new TypeHandler<?>[keyProperties.length];
     for (int i = 0; i < keyProperties.length; i++) {
+      // params 中是否有属性
       if (metaParam.hasSetter(keyProperties[i])) {
         TypeHandler<?> th;
         try {
           Class<?> keyPropertyType = metaParam.getSetterType(keyProperties[i]);
+          // 获取类型处理器。
           th = typeHandlerRegistry.getTypeHandler(keyPropertyType, JdbcType.forCode(rsmd.getColumnType(i + 1)));
         } catch (BindingException e) {
           th = null;
@@ -135,6 +145,7 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
       String property = keyProperties[i];
       TypeHandler<?> th = typeHandlers[i];
       if (th != null) {
+        // 根据类型处理器获取
         Object value = th.getResult(rs, i + 1);
         metaParam.setValue(property, value);
       }

@@ -24,20 +24,25 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class InterceptorChain {
-
+  // 拦截器
   private final List<Interceptor> interceptors = new ArrayList<Interceptor>();
 
   public Object pluginAll(Object target) {
+    // 调用所有的拦截器，调用应用方法
     for (Interceptor interceptor : interceptors) {
       target = interceptor.plugin(target);
     }
     return target;
   }
 
+  /**
+   * 添加 Interceptor
+   * @param interceptor
+   */
   public void addInterceptor(Interceptor interceptor) {
     interceptors.add(interceptor);
   }
-  
+
   public List<Interceptor> getInterceptors() {
     return Collections.unmodifiableList(interceptors);
   }

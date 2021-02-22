@@ -42,5 +42,6 @@
 
     <mappers>
         <mapper resource="org/apache/ibatis/dullbird/myTestMapper.xml"/>
+        <mapper resource="org/apache/ibatis/dullbird/userMapper.xml"/>
     </mappers>
 </configuration>
