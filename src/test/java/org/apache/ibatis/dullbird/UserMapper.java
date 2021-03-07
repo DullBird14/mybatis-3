@@ -15,4 +15,7 @@ public interface UserMapper {
     List<User> listUsers();
 
     User getUserById(@Param("id") Long id);
+    int insertUserWithPrimaryKey(@Param("user") User user);
+
+    int insertUserWithPrimaryKey2(@Param("user") User user);
 }

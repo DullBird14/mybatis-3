@@ -26,7 +26,13 @@ import org.apache.ibatis.type.SimpleTypeRegistry;
  * @author Clinton Begin
  */
 public class TextSqlNode implements SqlNode {
+  /**
+   * 文本
+   */
   private final String text;
+  /**
+   * 单元测试里面用
+   */
   private final Pattern injectionFilter;
 
   public TextSqlNode(String text) {
@@ -39,6 +45,7 @@ public class TextSqlNode implements SqlNode {
   }
   
   public boolean isDynamic() {
+    //匹配到${}就是动态sql
     DynamicCheckerTokenParser checker = new DynamicCheckerTokenParser();
     GenericTokenParser parser = createParser(checker);
     parser.parse(text);
@@ -47,6 +54,7 @@ public class TextSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    //处理${}
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
     context.appendSql(parser.parse(text));
     return true;
@@ -68,12 +76,15 @@ public class TextSqlNode implements SqlNode {
 
     @Override
     public String handleToken(String content) {
+      // content 对传入的查询值，比如${id}中就是id
+      //初始化value属性到context
       Object parameter = context.getBindings().get("_parameter");
       if (parameter == null) {
         context.getBindings().put("value", null);
       } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
         context.getBindings().put("value", parameter);
       }
+      // 利用ognl获取属性
       Object value = OgnlCache.getValue(content, context.getBindings());
       String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
       checkInjection(srtValue);

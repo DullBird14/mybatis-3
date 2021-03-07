@@ -22,8 +22,12 @@ CREATE TABLE user_info (
   name   VARCHAR(20),
   age    INT NOT NULL
 );
-
+CREATE TABLE number_info (
+  id     INT NOT NULL
+);
 INSERT INTO user_info (id, name, age) VALUES (1, 'a', 10);
 INSERT INTO user_info (id, name, age) VALUES (2, 'b', 11);
 INSERT INTO user_info (id, name, age) VALUES (3, 'c', 12);
+INSERT INTO number_info (id) VALUES (999);
+
 

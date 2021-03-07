@@ -72,13 +72,13 @@ public class MapperMethod {
         if (method.returnsVoid() && method.hasResultHandler()) {//如果返回void或者有ResultHandler
           executeWithResultHandler(sqlSession, args);
           result = null;
-        } else if (method.returnsMany()) {
+        } else if (method.returnsMany()) {// 如果返回多个
           result = executeForMany(sqlSession, args);
-        } else if (method.returnsMap()) {
+        } else if (method.returnsMap()) {// 如果返回map
           result = executeForMap(sqlSession, args);
         } else if (method.returnsCursor()) {
           result = executeForCursor(sqlSession, args);
-        } else {
+        } else {// 返回一个对象
           Object param = method.convertArgsToSqlCommandParam(args);
           result = sqlSession.selectOne(command.getName(), param);
         }

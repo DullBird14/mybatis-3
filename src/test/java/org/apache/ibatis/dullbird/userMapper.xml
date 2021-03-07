@@ -42,4 +42,16 @@
         where
         id = #{id}
     </select>
+    <insert id="insertUserWithPrimaryKey" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_info (id, name, age)
+        VALUES (#{user.id}, #{user.name}, #{user.age});
+    </insert>
+    <insert id="insertUserWithPrimaryKey2">
+        <selectKey keyProperty="user.id" resultType="long" order="BEFORE">
+            select id from number_info
+        </selectKey>
+        INSERT INTO user_info (id, name, age)
+        VALUES (#{user.id}, #{user.name}, #{user.age});
+    </insert>
+
 </mapper>
